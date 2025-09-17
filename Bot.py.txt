@@ -1,0 +1,29 @@
+from flask import Flask, request
+import requests
+import os
+
+TOKEN = "توكن البوت هنا"
+app = Flask(__name__)
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    data = request.get_json()
+    if 'message' in data:
+        chat_id = data['message']['chat']['id']
+        text = data['message'].get('text', '')
+
+        if text == '/start':
+            send_message(chat_id, "اهلاً! البوت شغال ✅")
+        elif text == '/points':
+            send_message(chat_id, "📊 ترتيب النقاط حالياً")
+        else:
+            send_message(chat_id, "رسالتك وصلت: " + text)
+    return 'ok'
+
+def send_message(chat_id, text):
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    payload = {'chat_id': chat_id, 'text': text}
+    requests.post(url, json=payload)
+
+if __name__ == '__main__':
+    app.run()
