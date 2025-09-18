@@ -1,0 +1,32 @@
+import os
+from collections import defaultdict
+from telegram import Update
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackContext
+
+# التوكن يظل مخفي بالـ Environment Variables
+BOT_TOKEN = os.environ.get("7820536904: AAEhv713vT1tCgRSTzVpU0018E
+DfXuEXOXk")
+CHANNEL_ID = "@kapon_3"  # اسم القناة جاهز
+
+user_reactions = defaultdict(int)
+
+async def reaction_handler(update: Update, context: CallbackContext):
+    if update.message and update.message.from_user:
+        username = update.message.from_user.username or update.message.from_user.first_name
+        user_reactions[username] += 1
+
+async def send_top_users(context: CallbackContext):
+    if not user_reactions:
+        return
+    sorted_users = sorted(user_reactions.items(), key=lambda x: x[1], reverse=True)
+    top_text = "🏆 أكثر المتفاعلين هذا الأسبوع:\n\n"
+    for i, (user, count) in enumerate(sorted_users[:10], start=1):
+        top_text += f"{i}. @{user} – {count} تفاعل\n"
+    await context.bot.send_message(chat_id=CHANNEL_ID, text=top_text)
+
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.ALL, reaction_handler))
+    app.job_queue.run_repeating(send_top_users, interval=86400, first=10)
+    print("البوت شغال...")
+    app.run_polling()
